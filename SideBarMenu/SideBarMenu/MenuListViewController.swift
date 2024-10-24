@@ -1,9 +1,4 @@
-//
-//  MenuListViewController.swift
-//  SideBarMenu
-//
-//  Created by Константин Малков on 24.10.2024.
-//
+
 
 import UIKit
 
@@ -31,5 +26,4 @@ class MenuListViewController: UIViewController {
     private func configureLabelView(){
         view.addSubview(centerLabel)
     }
-
 }
