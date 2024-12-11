@@ -8,23 +8,47 @@ on:
 
 jobs:
   build:
-    name: Build and analyse default scheme using xcodebuild command
+    name: Build and analyze default scheme using xcodebuild command
     runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Find Xcode project
+        run: |
+          cd SideBarMenu
+          file_to_build=$(find . -name "*.xcworkspace" -o -name "*.xcodeproj" | head -n 1)
+          if [ -z "$file_to_build" ]; then
+            echo "No Xcode project or workspace found"
+            exit 1
+          fi
+          echo "Found Xcode project/workspace: $file_to_build"
+
       - name: Set Default Scheme
         run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          cd SideBarMenu
+          scheme_list=$(xcodebuild -list -json 2>/dev/null | tr -d "\n")
+          if [ -z "$scheme_list" ]; then
+            echo "Failed to list Xcode schemes."
+            exit 1
+          fi
           default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
+          echo $default | tee default
+          echo "SCHEME=$default" >> $GITHUB_ENV
+
       - name: Build
-        env:
-          scheme: ${{ 'default' }}
         run: |
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild clean build analyze -scheme "$scheme" -"$filetype_parameter" "$file_to_build" | xcpretty && exit ${PIPESTATUS[0]}
+          cd SideBarMenu
+          scheme=$(cat default)
+          if [ -z "$scheme" ]; then
+            echo "Scheme not found, aborting build."
+            exit 1
+          fi
+          file_to_build=$(find . -name "*.xcworkspace" -o -name "*.xcodeproj" | head -n 1)
+          if [ -z "$file_to_build" ]; then
+            echo "No Xcode project or workspace found"
+            exit 1
+          fi
+          file_to_build=$(echo $file_to_build | awk '{$1=$1;print}')
+          xcodebuild clean build analyze -scheme "$scheme" -project "$file_to_build" | xcpretty && exit ${PIPESTATUS[0]}
