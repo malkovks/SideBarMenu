@@ -86,14 +86,17 @@ extension MenuListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MenuListTableViewCell.identifier, for: indexPath) as? MenuListTableViewCell
         var listConfig = UIListContentConfiguration.cell()
-        listConfig.image = UIImage(systemName: "\(indexPath.section).square")
+        listConfig.image = categories[indexPath.section].imageCase ?? UIImage(systemName: "questionmark.circle.fill")
         listConfig.text = categories[indexPath.section].rawValue.capitalized
-        listConfig.secondaryText = "Some title at \(indexPath.section) index"
+        listConfig.imageProperties.tintColor = .systemIndigo
         listConfig.textProperties.alignment = .center
         listConfig.secondaryTextProperties.alignment = .center
-        listConfig.imageProperties.tintColor = .textColorAsset
         listConfig.textProperties.color = .textColorAsset
         cell?.contentConfiguration = listConfig
+        cell?.layer.cornerRadius = 15
+        cell?.layer.masksToBounds = true
+        cell?.layer.borderWidth = 2
+        cell?.layer.borderColor = UIColor.systemIndigo.cgColor
         return cell ?? UITableViewCell()
     }
     

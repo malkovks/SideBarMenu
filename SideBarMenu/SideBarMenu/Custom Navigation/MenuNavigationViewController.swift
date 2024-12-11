@@ -12,7 +12,6 @@ class MenuNavigationViewController: UINavigationController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureMenuNavigation()
-        
     }
     
     private func configureMenuNavigation() {
