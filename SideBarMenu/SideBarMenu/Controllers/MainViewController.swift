@@ -56,6 +56,7 @@ class MainViewController: UIViewController {
         configureViewController()
         configureNavigationItems()
         configureView()
+        AVCaptureManager.shared.checkCameraPermission(viewController: self)
     }
     
     override func viewWillAppear(_ animated: Bool) {

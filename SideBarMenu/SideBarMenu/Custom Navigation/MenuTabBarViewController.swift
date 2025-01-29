@@ -21,7 +21,6 @@ class MenuTabBarViewController: UITabBarController {
         tabBar.tintColor = .backgroundAsset
         tabBar.barTintColor = .systemBackground
         tabBar.backgroundColor = .systemBackground
-        tabBar.layer.masksToBounds = true
         let height = tabBar.frame.size.height/2
         tabBar.frame.size.height = height
         tabBar.frame.origin.y = tabBar.frame.size.height - height
