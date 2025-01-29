@@ -39,6 +39,7 @@ struct UnsplashPhotos: Codable {
         case currentUserCollections = "current_user_collections"
         case urls, links, user
     }
+    //sdddsd
 }
 
 // MARK: - Collection
