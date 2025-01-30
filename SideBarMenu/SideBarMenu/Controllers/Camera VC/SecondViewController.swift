@@ -9,11 +9,24 @@
 import UIKit
 import AVFoundation
 
-class SecondViewController: UIViewController {
+enum FlashModesType: String, CaseIterable {
+    case on
+    case off
+    case always
     
-    private var captureSession: AVCaptureSession!
-    private var photoOutput: AVCapturePhotoOutput!
-    private var previewLayer: AVCaptureVideoPreviewLayer!
+    var typeImage: UIImage {
+        switch self {
+        case .on:
+            return .flash_on
+        case .off:
+            return .flash_off
+        case .always:
+            return .flash_always
+        }
+    }
+}
+
+class SecondViewController: UIViewController {
     
     private lazy var photoButton: UIButton = {
         $0.tintColor = .white
@@ -26,18 +39,78 @@ class SecondViewController: UIViewController {
     }(UIButton(type: .system))
     
     private lazy var rotateCameraButton: UIButton = {
-        let config = UIImage.SymbolConfiguration(pointSize: 35, weight: .medium, scale: .medium)
+        let config = UIImage.SymbolConfiguration(pointSize: 30, weight: .medium, scale: .medium)
+        $0.contentMode = .center
         $0.setImage(UIImage(systemName: "arrow.trianglehead.2.clockwise.rotate.90.circle")?.withConfiguration(config), for: .normal)
         $0.backgroundColor = .clear
         $0.addTarget(self, action: #selector(didTapRotateCamera), for: .primaryActionTriggered)
         $0.tintColor = .white
         return $0
     }(UIButton(type: .system))
+    
+    private lazy var flashButton: UIButton = {
+        $0.contentMode = .center
+        $0.tintColor = .white
+        $0.setImage(.flash_off, for: .normal)
+        $0.backgroundColor = .clear
+        $0.menu = menu
+        $0.showsMenuAsPrimaryAction = true
+        return $0
+    }(UIButton(type: .system))
+    
+    private let cameraManager: CameraManager = .init()
+    
+    
+    private var flashMode: AVCaptureDevice.FlashMode = .off {
+        didSet {
+            switch flashMode {
+                
+            case .off:
+                flashButton.setImage(.flash_off, for: .normal)
+            case .on:
+                flashButton.setImage(.flash_on, for: .normal)
+            case .auto:
+                flashButton.setImage(.flash_always, for: .normal)
+            @unknown default:
+                break
+            }
+            cameraManager.setupFlashMode(flashMode)
+        }
+    }
+    
+    private var menuItems: [UIAction] {
+        return FlashModesType.allCases.map { type in
+            return UIAction(title: type.rawValue,image: type.typeImage) { [weak self] _ in
+                guard let self else { return }
+                switch type {
+                case .on:
+                    flashMode = .on
+                    cameraManager.setupTorchFlash(isFlashing: false)
+                case .off:
+                    flashMode = .off
+                    cameraManager.setupTorchFlash(isFlashing: false)
+                case .always:
+                    flashMode = .auto
+                    cameraManager.setupTorchFlash(isFlashing: true)
+                }
+            }
+        }
+    }
+    
+    private var menu: UIMenu {
+        return UIMenu(title: "Flash mode", options: [], children: menuItems)
+    }
 
+    //MARK: - Main load methods
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupCamera()
+        cameraManager.setupCamera()
         setupGestures()
+        DispatchQueue.main.async {
+            let layer = self.cameraManager.getPreviewLayer()
+            layer.frame = self.view.layer.bounds
+            self.view.layer.addSublayer(layer)
+        }
         view.backgroundColor  = .systemIndigo
     }
     
@@ -45,15 +118,18 @@ class SecondViewController: UIViewController {
         super.viewDidLayoutSubviews()
         view.addSubview(photoButton)
         view.addSubview(rotateCameraButton)
+        view.addSubview(flashButton)
         
         photoButton.frame = CGRect(x: view.center.x - 35, y: view.frame.height - (tabBarController?.tabBar.frame.height)! - 100, width: 70, height: 70)
-        rotateCameraButton.frame = CGRect(x: view.frame.size.width - 60 - 10, y: photoButton.center.y, width: 50, height: 50)
+        rotateCameraButton.frame = CGRect(x: view.frame.size.width - 60 - 10, y: photoButton.center.y - 25, width: 50, height: 50)
+        flashButton.frame = CGRect(x: 20, y: photoButton.center.y - 25, width: 50, height: 50)
         
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: true)
+        cameraManager.startSession()
         if let tabBar = tabBarController?.tabBar {
             tabBar.isTranslucent = true
             tabBar.backgroundImage = UIImage()
@@ -65,7 +141,7 @@ class SecondViewController: UIViewController {
         super.viewWillDisappear(animated)
         
         navigationController?.setNavigationBarHidden(false, animated: true)
-        
+        cameraManager.stopSession()
         if let tabBar = tabBarController?.tabBar {
             tabBar.isTranslucent = false
             tabBar.backgroundImage = nil
@@ -73,35 +149,22 @@ class SecondViewController: UIViewController {
         }
     }
     
+    //MARK: - Actions
     @objc private func didTapRotateCamera(){
-        guard let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput else { return }
-        captureSession.beginConfiguration()
-        captureSession.removeInput(currentInput)
-        
-        let newPosition: AVCaptureDevice.Position = (currentInput.device.position == .back) ? .front : .back
-        guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else { return }
-        do {
-            let newInput = try AVCaptureDeviceInput(device: newCamera)
-            if captureSession.canAddInput(newInput) {
-                captureSession.addInput(newInput)
-            }
-        } catch {
-            print("❌ Ошибка при переключении камеры: \(error.localizedDescription)")
-        }
-        captureSession.commitConfiguration()
+        cameraManager.switchCamera()
     }
     
     @objc private func didTapMakePhoto(){
-        let settings = AVCapturePhotoSettings()
-        photoOutput.capturePhoto(with: settings, delegate: self)
+        cameraManager.takePhoto(delegate: self)
     }
     
     @objc private func didTapOnCameraLayer(_ sender: UITapGestureRecognizer){
         let point = sender.location(in: view)
-        focus(at: point)
+        cameraManager.focus(at: point, in: view)
         showFocusIndicator(at: point)
     }
     
+    //MARK: - Setup methods
     private func showFocusIndicator(at point: CGPoint){
         let focusView = UIView(frame: CGRect(x: 0, y: 0, width: 80, height: 80))
         focusView.center = point
@@ -123,70 +186,9 @@ class SecondViewController: UIViewController {
         }
     }
     
-    private func focus(at point: CGPoint){
-        guard let device = AVCaptureDevice.default(for: .video) else { return }
-        let pointSize = CGPoint(x: point.x / view.bounds.width, y: point.y / view.bounds.height)
-        do {
-            
-            
-            try device.lockForConfiguration()
-            if device.isFocusPointOfInterestSupported {
-                device.focusPointOfInterest = pointSize
-                device.focusMode = .autoFocus
-            }
-            
-            if device.isExposurePointOfInterestSupported {
-                device.exposurePointOfInterest = pointSize
-                device.exposureMode = .continuousAutoExposure
-            }
-            device.unlockForConfiguration()
-            
-        } catch {
-            print("❌ Ошибка: \(error)")
-        }
-    }
-    
     private func setupGestures(){
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapOnCameraLayer))
         view.addGestureRecognizer(tapGesture)
-    }
-    
-    private func setupCamera() {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            
-            self.captureSession = AVCaptureSession()
-            self.captureSession.sessionPreset = .photo
-            
-            guard let backCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-                print("❌ Ошибка: камера не найдена")
-                return
-            }
-            
-            do {
-                let input = try AVCaptureDeviceInput(device: backCamera)
-                if self.captureSession.canAddInput(input) {
-                    self.captureSession.addInput(input)
-                }
-                
-                self.photoOutput = AVCapturePhotoOutput()
-                if self.captureSession.canAddOutput(self.photoOutput) {
-                    self.captureSession.addOutput(self.photoOutput)
-                }
-                self.captureSession.startRunning()
-                DispatchQueue.main.async {
-                    self.previewLayer = AVCaptureVideoPreviewLayer(session: self.captureSession)
-                    self.previewLayer.videoGravity = .resizeAspectFill
-                    self.previewLayer.frame = self.view.layer.bounds
-                    self.view.layer.addSublayer(self.previewLayer)
-                    
-                    
-                }
-                
-            } catch {
-                print("❌ Ошибка настройки камеры: \(error)")
-            }
-        }
     }
 }
 
@@ -197,6 +199,6 @@ extension SecondViewController : AVCapturePhotoCaptureDelegate {
             return 
         }
         let vc = PhotoCropViewController(image: image)
-        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: false)
     }
 }

@@ -19,13 +19,10 @@ class AVCaptureManager: NSObject {
 
         switch cameraAuthorizationStatus {
         case .notDetermined:
-            // Пользователь еще не дал ответа, запрашиваем доступ
             requestCameraPermission()
         case .authorized:
-            // Доступ уже предоставлен
             print("Доступ к камере разрешен")
         case .denied, .restricted:
-            // Пользователь отказал в доступе или доступ ограничен
             showCameraAccessDeniedAlert(viewController)
         @unknown default:
             fatalError("Неизвестный статус доступа к камере")
