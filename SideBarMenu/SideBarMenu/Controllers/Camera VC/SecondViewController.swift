@@ -198,7 +198,7 @@ extension SecondViewController : AVCapturePhotoCaptureDelegate {
               let image = UIImage(data: imageData) else {
             return 
         }
-        let vc = PhotoCropViewController(image: image)
+        let vc = PhotoPreviewViewController(image: image)
         navigationController?.pushViewController(vc, animated: false)
     }
 }
