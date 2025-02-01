@@ -71,7 +71,7 @@ class MainViewController: UIViewController {
     }
     
     private func configureViewController(){
-        view.backgroundColor = .backgroundAsset
+        view.backgroundColor = .systemBackground
         title = "Module"
     }
     

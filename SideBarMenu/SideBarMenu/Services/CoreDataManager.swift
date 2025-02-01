@@ -53,10 +53,15 @@ final class CoreDataManager: NSObject {
         }
     }
     
-    func deletePhoto(_ model: PhotoEntity){
-        context.delete(model)
+    func deletePhoto(_ model: PhotoModel){
+        let fetchRequest = NSFetchRequest<PhotoEntity>(entityName: "PhotoEntity")
+        fetchRequest.predicate = NSPredicate(format: "id == %@", model.id.uuidString)
+        
         do {
-            try context.save()
+            if let photo = try context.fetch(fetchRequest).first {
+                context.delete(photo)
+                try context.save()
+            }
         } catch {
             print("Error deleting photo: \(error.localizedDescription)")
         }

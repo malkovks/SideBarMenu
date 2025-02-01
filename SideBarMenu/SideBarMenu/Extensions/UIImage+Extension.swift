@@ -15,4 +15,5 @@ extension UIImage {
     static let flash_off: UIImage = .init(systemName: "flashlight.off.fill")!.withConfiguration(config)
     static let flash_always: UIImage = .init(systemName: "lightbulb.min.fill")!.withConfiguration(config)
     
+    static let ellipsis: UIImage = .init(systemName: "ellipsis.circle.fill")!.withConfiguration(config)
 }

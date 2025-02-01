@@ -17,8 +17,8 @@ class MenuNavigationViewController: UINavigationController {
     private func configureMenuNavigation() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = .lightBlue
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.black, .font : UIFont.systemFont(ofSize: 20, weight: .semibold)]
+        appearance.backgroundColor = .systemBackground
+        appearance.titleTextAttributes = [.foregroundColor: UIColor.backgroundAsset, .font : UIFont.systemFont(ofSize: 20, weight: .semibold)]
         
         navigationBar.scrollEdgeAppearance = appearance
         navigationBar.standardAppearance = appearance
@@ -30,7 +30,6 @@ class MenuNavigationViewController: UINavigationController {
         let largeAttribute: [NSAttributedString.Key : Any] = [.font : UIFont.systemFont(ofSize: 28, weight: .bold)]
         navigationBar.largeTitleTextAttributes = largeAttribute
         
-        navigationBar.tintColor = .red
-        navigationBar.barTintColor = .yellow
+        navigationBar.tintColor = .backgroundAsset
     }
 }

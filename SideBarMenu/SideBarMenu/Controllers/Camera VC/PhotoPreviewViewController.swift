@@ -15,6 +15,8 @@ class PhotoPreviewViewController: UIViewController {
     private lazy var imageView: UIImageView = {
         $0.contentMode = .scaleAspectFit
         $0.clipsToBounds = true
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor.backgroundAsset.cgColor
         return $0
     }(UIImageView())
     
@@ -125,9 +127,5 @@ class PhotoPreviewViewController: UIViewController {
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
         present(alert, animated: true)
-    }
-    
-    private func saveImageToLibrary(){
-        
     }
 }

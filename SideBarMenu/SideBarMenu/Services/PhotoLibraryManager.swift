@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import PhotosUI
 
 final class PhotoLibraryManager: NSObject {
     static let shared = PhotoLibraryManager()
@@ -34,6 +35,22 @@ final class PhotoLibraryManager: NSObject {
         }
     }
     
+    func presentPicker(from viewController: UIViewController, delegate: PHPickerViewControllerDelegate) {
+        checkAuthorizationStatus { isSuccess in
+            guard isSuccess else {
+                viewController.presentAlert(title: "Check your permission for Photo Library")
+                return
+            }
+            var config = PHPickerConfiguration()
+            config.filter = .images
+            config.selectionLimit = 1
+            
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = delegate
+            viewController.present(picker, animated: true)
+        }
+    }
+    
     
     private func checkAuthorizationStatus(completion: @escaping (Bool) -> Void) {
         let status = PHPhotoLibrary.authorizationStatus()
@@ -52,9 +69,9 @@ final class PhotoLibraryManager: NSObject {
     
     
     private func requestAccess(completion: @escaping (Bool) -> Void) {
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
             DispatchQueue.main.async {
-                completion(status == .authorized)
+                completion(status == .authorized || status == .limited)
             }
         }
     }

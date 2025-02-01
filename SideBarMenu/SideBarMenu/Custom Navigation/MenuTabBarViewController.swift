@@ -29,8 +29,8 @@ class MenuTabBarViewController: UITabBarController {
     private func setupTabBar(){
         let items: [UINavigationController] = [
             prepareTabController(vc: MainViewController(), title: "Main", image: UIImage(systemName: "photo.on.rectangle.angled"), tag: 0),
-            prepareTabController(vc: SecondViewController(), title: "Capture", image: UIImage(systemName: "camera.viewfinder"), tag: 1),
-            prepareTabController(vc: ThirdViewController(), title: "Favorites", image: UIImage(systemName: "heart.fill"), tag: 2),
+            prepareTabController(vc: CameraViewController(), title: "Capture", image: UIImage(systemName: "camera.viewfinder"), tag: 1),
+            prepareTabController(vc: SavedImagesViewController(), title: "Favorites", image: UIImage(systemName: "heart.fill"), tag: 2),
             prepareTabController(vc: ForthViewController(), title: "Settings", image: UIImage(systemName: "gear"), tag: 3)
         ]
         setViewControllers(items, animated: true)

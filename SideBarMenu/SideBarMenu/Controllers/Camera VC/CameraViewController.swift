@@ -1,5 +1,5 @@
 //
-// File name: SecondViewController.swift
+// File name: CameraViewController.swift
 // Package: SideBarMenu
 //
 // Created by Malkov Konstantin on 11.12.2024.
@@ -9,24 +9,7 @@
 import UIKit
 import AVFoundation
 
-enum FlashModesType: String, CaseIterable {
-    case on
-    case off
-    case always
-    
-    var typeImage: UIImage {
-        switch self {
-        case .on:
-            return .flash_on
-        case .off:
-            return .flash_off
-        case .always:
-            return .flash_always
-        }
-    }
-}
-
-class SecondViewController: UIViewController {
+class CameraViewController: UIViewController {
     
     private lazy var photoButton: UIButton = {
         $0.tintColor = .white
@@ -111,7 +94,7 @@ class SecondViewController: UIViewController {
             layer.frame = self.view.layer.bounds
             self.view.layer.addSublayer(layer)
         }
-        view.backgroundColor  = .systemIndigo
+        view.backgroundColor  = .secondBackgroundAsset
     }
     
     override func viewDidLayoutSubviews() {
@@ -192,13 +175,14 @@ class SecondViewController: UIViewController {
     }
 }
 
-extension SecondViewController : AVCapturePhotoCaptureDelegate {
+extension CameraViewController : AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: (any Error)?) {
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
             return 
         }
         let vc = PhotoPreviewViewController(image: image)
+        vc.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(vc, animated: false)
     }
 }
